@@ -1,4 +1,5 @@
 import pygame
+import random
  
 # Define some colors
 BLACK = (0, 0, 0)
@@ -8,7 +9,7 @@ RED = (255, 0, 0)
  
 TILELENGTH = 20
 MARGIN = 2
-WINDOWLENGTH = 1100
+WINDOWLENGTH = 610
  
 # Create a 2 dimensional array. A two dimensional
 # array is simply a list of lists.
@@ -16,17 +17,16 @@ grid = []
 for row in range(WINDOWLENGTH // TILELENGTH):
     grid.append([])
     for column in range(WINDOWLENGTH // TILELENGTH):
-        grid[row].append(0)
+        grid[row].append(random.randint(0,1))
  
 # Initialize pygame
 pygame.init()
  
 # Set the HEIGHT and WIDTH of the screen
-WINDOW_SIZE = [WINDOWLENGTH, WINDOWLENGTH]
-screen = pygame.display.set_mode(WINDOW_SIZE)
+screen = pygame.display.set_mode([WINDOWLENGTH, WINDOWLENGTH])
  
 # Set title of screen
-pygame.display.set_caption("Array Backed Grid")
+pygame.display.set_caption("Conway's Game of Life")
  
 # Loop until the user clicks the close button.
 done = False
@@ -35,15 +35,17 @@ done = False
 clock = pygame.time.Clock()
 mouseDown = False
 
+def calculateAliveAround(grid, x, y):
+    #return (grid[y][x])
+    pass
+
 # -------- Main Program Loop -----------
 while not done:
     for event in pygame.event.get():  # User did something
         if event.type == pygame.QUIT:  
             done = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # User clicks the mouse. Get the position
             mouseDown = True
-            # Change the x/y screen coordinates to grid coordinates
         elif event.type == pygame.MOUSEBUTTONUP:
             mouseDown = False
     
@@ -70,7 +72,9 @@ while not done:
                               (MARGIN + TILELENGTH) * row + MARGIN,
                               TILELENGTH,
                               TILELENGTH])
- 
+            
+            print(calculateAliveAround(grid, row, column))
+
     # Limit to 60 frames per second
     clock.tick(60)
  
