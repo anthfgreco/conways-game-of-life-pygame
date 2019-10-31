@@ -7,17 +7,17 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
  
-TILELENGTH = 20
+TILELENGTH = 25
 MARGIN = 2
-WINDOWLENGTH = 610
+WINDOWLENGTH = 675
  
 # Create a 2 dimensional array. A two dimensional
 # array is simply a list of lists.
 grid = []
-for row in range(WINDOWLENGTH // TILELENGTH):
+for row in range((WINDOWLENGTH // TILELENGTH) * (1 + MARGIN)): 
     grid.append([])
-    for column in range(WINDOWLENGTH // TILELENGTH):
-        grid[row].append(random.randint(0,1))
+    for column in range((WINDOWLENGTH // TILELENGTH) * (1 + MARGIN)):
+        grid[row].append([random.randint(0,1)])
  
 # Initialize pygame
 pygame.init()
