@@ -1,17 +1,65 @@
 import pygame
 import random
 
-# Define Colors
+# Define colors
 BLACK = (0,     0,   0)
 WHITE = (255, 255, 255)
 RED   = (255,   0,   0)
 GREEN = (0,   255,   0)
 BLUE  = (0,     0, 255)
 
-# Default values
-TILELENGTH = 25
+TILELENGTH = 20
 WINDOWLENGTH = 1000
 NUM_SQUARES = int(WINDOWLENGTH / TILELENGTH)
+
+def upValue(row, col):
+    try:
+        if (grid[row][col-1] == 1): return 1
+        else: return 0
+    except IndexError:
+        return 0
+def downValue(row, col):
+    try:
+        if grid[row][col+1] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
+def leftValue(row, col):
+    try:
+        if grid[row-1][col] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
+def rightValue(row, col):
+    try:
+        if grid[row+1][col] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
+def leftUpValue(row, col):
+    try:
+        if grid[row-1][col-1] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
+def rightUpValue(row, col):
+    try:
+        if grid[row+1][col-1] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
+def leftDownValue (row, col):
+    try:
+        if grid[row-1][col+1] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
+def rightDownValue(row, col):
+    try:
+        if grid[row+1][col+1] == 1: return 1
+        else: return 0
+    except IndexError:
+        return 0
 
 def calculateNewGrid(grid):
     newgrid = []
@@ -22,26 +70,10 @@ def calculateNewGrid(grid):
 
     for row in range(len(grid)): 
         for col in range(len(grid)):
-            population = 0
-            if row == 0 or col == 0 or row == len(grid) - 1 or col == len(grid) - 1:
-                population = 0
-            else:
-                if grid[row-1][col] == 1: 
-                    population += 1
-                if grid[row+1][col] == 1: 
-                    population += 1
-                if grid[row][col-1] == 1: 
-                    population += 1
-                if grid[row][col+1] == 1: 
-                    population += 1
-                if grid[row-1][col+1] == 1: 
-                    population += 1
-                if grid[row-1][col-1] == 1: 
-                    population += 1
-                if grid[row+1][col+1] == 1: 
-                    population += 1
-                if grid[row+1][col-1] == 1: 
-                    population += 1
+
+            population = leftUpValue(row,col) + upValue(row,col) + rightUpValue(row,col) + \
+                         leftValue(row,col) +                        rightValue(row,col) + \
+                         leftDownValue(row,col) +downValue(row,col) + rightDownValue(row,col) 
             
             if population < 2 or population > 3:
                 newgrid[row][col] = 0
@@ -118,7 +150,7 @@ while not done:
     pygame.display.flip()
     if runSimulation:
         grid = calculateNewGrid(grid)
-        clock.tick(30)
+        clock.tick(25)
     else:
         drawBoxes()
         clock.tick(120)
