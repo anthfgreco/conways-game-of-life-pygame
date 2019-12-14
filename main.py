@@ -12,6 +12,9 @@ TILELENGTH = 20
 WINDOWLENGTH = 1000
 NUM_SQUARES = int(WINDOWLENGTH / TILELENGTH)
 
+# Functions to calculate if neighbour is turned on (Value of 1)
+# If index is out of range or value of neighbour is 0, return 0
+# If neighbour has a value of 1, return 1
 def upValue(row, col):
     try:
         if (grid[row][col-1] == 1): return 1
@@ -61,6 +64,9 @@ def rightDownValue(row, col):
     except IndexError:
         return 0
 
+# Function to calculate updated grid
+# Calculates neighbours population for each tile
+# Returns the updated grid to be displayed
 def calculateNewGrid(grid):
     newgrid = []
     for row in range(len(grid)): 
@@ -75,6 +81,10 @@ def calculateNewGrid(grid):
                          leftValue(row,col) +                        rightValue(row,col) + \
                          leftDownValue(row,col) +downValue(row,col) + rightDownValue(row,col) 
             
+            # Conway's Game of Life Rules:
+            # 1. Any live cell with two or three neighbors survives.
+            # 2. Any dead cell with three live neighbors becomes a live cell.
+            # 3. All other live cells die in the next generation. Similarly, all other dead cells stay dead.
             if population < 2 or population > 3:
                 newgrid[row][col] = 0
             elif population == 3:
@@ -104,8 +114,9 @@ clock = pygame.time.Clock()
 
 # Loop until the user clicks the close button.
 done = False
+runSimulation = True
 
-#Let user draw in boxes
+# Function to color in boxes while the mouse is pressed down
 def drawBoxes():
     draw = True
     cur = pygame.mouse.get_pos()
@@ -116,20 +127,16 @@ def drawBoxes():
         yTileIndex = int(cur[0] / TILELENGTH)
         grid[xTileIndex][yTileIndex] = 1
 
-runSimulation = True
-
 # -------- Main Program Loop -----------
 while not done:
     for event in pygame.event.get():  # User did something
         if event.type == pygame.QUIT:  
             done = True
         if event.type == pygame.MOUSEBUTTONDOWN:
-            runSimulation = False
+            runSimulation = False # If mouse button is down, stop simulating
         if event.type == pygame.MOUSEBUTTONUP:
-            runSimulation = True
+            runSimulation = True # If mouse button is up, start simulating
 
-
-    # Set the screen background
     screen.fill(WHITE)
  
     # Draw the grid
@@ -142,19 +149,14 @@ while not done:
                 square = pygame.Rect(TILELENGTH * column, TILELENGTH * row, TILELENGTH, TILELENGTH)
                 pygame.draw.rect(screen, WHITE, square)
 
-    # Limit to 60 frames per second
-    
- 
-    
-    # Update the screen with what we've drawn.
     pygame.display.flip()
+    # If true, calculate new grid and limit clock to 25
     if runSimulation:
         grid = calculateNewGrid(grid)
         clock.tick(25)
+    # If false, let user use mouse to make tiles active and increase clock to 120 to reduce input lag
     else:
         drawBoxes()
         clock.tick(120)
- 
-# Be IDLE friendly. If you forget this line, the program will 'hang'
-# on exit.
+
 pygame.quit()
