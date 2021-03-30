@@ -1,5 +1,9 @@
 import pygame
 import random
+import timeit
+import os 
+from numba import jit
+import numpy as np
 
 # Define colors
 BLACK = (0,     0,   0)
@@ -8,78 +12,27 @@ RED   = (255,   0,   0)
 GREEN = (0,   255,   0)
 BLUE  = (0,     0, 255)
 
-TILELENGTH = 20
-WINDOWLENGTH = 1000
-NUM_SQUARES = int(WINDOWLENGTH / TILELENGTH)
+BACKGROUND_COLOR = BLACK
+TILE_COLOR = WHITE
 
-# Functions to calculate if neighbour is turned on (Value of 1)
-# If index is out of range or value of neighbour is 0, return 0
-# If neighbour has a value of 1, return 1
-def upValue(row, col):
-    try:
-        if (grid[row][col-1] == 1): return 1
-        else: return 0
-    except IndexError:
-        return 0
-def downValue(row, col):
-    try:
-        if grid[row][col+1] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
-def leftValue(row, col):
-    try:
-        if grid[row-1][col] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
-def rightValue(row, col):
-    try:
-        if grid[row+1][col] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
-def leftUpValue(row, col):
-    try:
-        if grid[row-1][col-1] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
-def rightUpValue(row, col):
-    try:
-        if grid[row+1][col-1] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
-def leftDownValue (row, col):
-    try:
-        if grid[row-1][col+1] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
-def rightDownValue(row, col):
-    try:
-        if grid[row+1][col+1] == 1: return 1
-        else: return 0
-    except IndexError:
-        return 0
+TILE_LENGTH = 8
+NUM_X_SQUARES = 100
+NUM_Y_SQUARES = 185
+INIT_FILLED = 5 # 0-11, 0 means no filled tiled at beginning, 11 means all tiles are filled at beginning
 
 # Function to calculate updated grid
 # Calculates neighbours population for each tile
 # Returns the updated grid to be displayed
+@jit(nopython=True)
 def calculateNewGrid(grid):
-    newgrid = []
-    for row in range(len(grid)): 
-        newgrid.append([])
-        for column in range(len(grid)):
-            newgrid[row].append(0)
+    newgrid = np.zeros((NUM_X_SQUARES, NUM_Y_SQUARES))
 
-    for row in range(len(grid)): 
-        for col in range(len(grid)):
+    for row in range(NUM_X_SQUARES): 
+        for col in range(NUM_Y_SQUARES):
 
-            population = leftUpValue(row,col) + upValue(row,col) + rightUpValue(row,col) + \
-                         leftValue(row,col) +                        rightValue(row,col) + \
-                         leftDownValue(row,col) +downValue(row,col) + rightDownValue(row,col) 
+            population = grid[(row-1)%NUM_X_SQUARES][(col-1)%NUM_Y_SQUARES]     + grid[row][(col-1)%NUM_Y_SQUARES] +    grid[(row+1)%NUM_X_SQUARES][(col-1)%NUM_Y_SQUARES] + \
+                         grid[(row-1)%NUM_X_SQUARES][col] +                                                             grid[(row+1)%NUM_X_SQUARES][col] + \
+                         grid[(row-1)%NUM_X_SQUARES][(col+1)%NUM_Y_SQUARES]     + grid[row][(col+1)%NUM_Y_SQUARES] +    grid[(row+1)%NUM_X_SQUARES][(col+1)%NUM_Y_SQUARES]
             
             # Conway's Game of Life Rules:
             # 1. Any live cell with two or three neighbors survives.
@@ -93,70 +46,70 @@ def calculateNewGrid(grid):
                 newgrid[row][col] = grid[row][col]
     return newgrid
 
-# Create a 2 dimensional array
-grid = []
-for row in range(NUM_SQUARES): 
-    grid.append([])
-    for column in range(NUM_SQUARES):
-        rand = random.randint(0,10)
-        if rand > 3:
-            grid[row].append(0)
-        else:
-            grid[row].append(1)
- 
-# Initialize pygame
-# Set the HEIGHT and WIDTH of the screen
-# Set title of screen
-pygame.init()
-screen = pygame.display.set_mode([WINDOWLENGTH, WINDOWLENGTH])
-pygame.display.set_caption("Conway's Game of Life")
-clock = pygame.time.Clock()
-
-# Loop until the user clicks the close button.
-done = False
-runSimulation = True
-
 # Function to color in boxes while the mouse is pressed down
 def drawBoxes():
-    draw = True
-    cur = pygame.mouse.get_pos()
+    pos = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     if click[0] == True:
-        print(cur)
-        xTileIndex = int(cur[1] / TILELENGTH)
-        yTileIndex = int(cur[0] / TILELENGTH)
+        xTileIndex = int(pos[1] / TILE_LENGTH)
+        yTileIndex = int(pos[0] / TILE_LENGTH)
         grid[xTileIndex][yTileIndex] = 1
 
-# -------- Main Program Loop -----------
-while not done:
-    for event in pygame.event.get():  # User did something
-        if event.type == pygame.QUIT:  
-            done = True
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            runSimulation = False # If mouse button is down, stop simulating
-        if event.type == pygame.MOUSEBUTTONUP:
-            runSimulation = True # If mouse button is up, start simulating
+if __name__ == "__main__":     
+    # Initialize random 2D array
+    grid = np.zeros((NUM_X_SQUARES, NUM_Y_SQUARES))
+    for row in range(NUM_X_SQUARES): 
+        for column in range(NUM_Y_SQUARES):
+            rand = random.randint(0,10)
+            if rand < INIT_FILLED:
+                grid[row][column] = 1
+    
+    # Initialize pygame
+    # Set the HEIGHT and WIDTH of the screen
+    # Set title of screen
+    pygame.init()
+    screen = pygame.display.set_mode([NUM_Y_SQUARES * TILE_LENGTH, NUM_X_SQUARES * TILE_LENGTH])
+    pygame.display.set_caption("Conway's Game of Life")
+    clock = pygame.time.Clock()
 
-    screen.fill(WHITE)
- 
-    # Draw the grid
-    for row in range(NUM_SQUARES): 
-        for column in range(NUM_SQUARES): 
-            if grid[row][column] == 1:
-                square = pygame.Rect(TILELENGTH * column, TILELENGTH * row, TILELENGTH, TILELENGTH)
-                pygame.draw.rect(screen, BLACK, square)
-            else:
-                square = pygame.Rect(TILELENGTH * column, TILELENGTH * row, TILELENGTH, TILELENGTH)
-                pygame.draw.rect(screen, WHITE, square)
+    # Loop until the user clicks the close button.
+    done = False
+    drawing = False
 
-    pygame.display.flip()
-    # If true, calculate new grid and limit clock to 25
-    if runSimulation:
-        grid = calculateNewGrid(grid)
-        clock.tick(25)
-    # If false, let user use mouse to make tiles active and increase clock to 120 to reduce input lag
-    else:
-        drawBoxes()
-        clock.tick(120)
+    # -------- Main Program Loop -----------
+    while not done:
+        for event in pygame.event.get():  # User did something
+            if event.type == pygame.QUIT:  
+                done = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                drawing = True # If mouse button is down, stop simulating
+            if event.type == pygame.MOUSEBUTTONUP:
+                drawing = False # If mouse button is up, start simulating
 
-pygame.quit()
+        screen.fill(BACKGROUND_COLOR)
+    
+        start_time = timeit.default_timer()
+
+        # Draw the grid
+        for row in range(NUM_X_SQUARES): 
+            for column in range(NUM_Y_SQUARES): 
+                if grid[row][column] == 1:
+                    square = pygame.Rect(TILE_LENGTH * column, TILE_LENGTH * row, TILE_LENGTH, TILE_LENGTH)
+                    pygame.draw.rect(screen, TILE_COLOR, square)
+                else:
+                    square = pygame.Rect(TILE_LENGTH * column, TILE_LENGTH * row, TILE_LENGTH, TILE_LENGTH)
+                    pygame.draw.rect(screen, BACKGROUND_COLOR, square)
+
+        pygame.display.flip()
+
+        # Calculate new grid
+        if not(drawing):
+            os.system('cls')
+            grid = calculateNewGrid(grid)
+            print("Time between updates: ", timeit.default_timer() - start_time)
+            clock.tick(40)
+        # Let user use mouse to make tiles active
+        else:
+            drawBoxes()
+
+    pygame.quit()
